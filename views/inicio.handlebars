@@ -1,0 +1,35 @@
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="/estilo/estilo.css" />
+  </head>
+  <style>
+    *{ box-sizing: border-box; } body{ margin:0; font-family: 'Roboto',
+    sans-serif; } .nav{ display: flex; flex-flow: row wrap; height: 100px;
+    background: white; justify-content: center; align-items: center;
+    position:fixed; width: 100%; } .logo{ flex:20%; margin-left:10%; text-align:
+    left; } .logo h1{ font-family: 'Lobster', cursive; color:#180F4A;
+    font-size:34px; } .menu{ flex:70%; text-align:right; padding:20px; } .menu
+    a{ color:#180F4A; text-decoration: none; font-size:20px; padding:20px 16px;
+    } .menu a:hover{ color:#FF2978; border-top:4px solid #180F4A; } .buton{
+    border: none;} #botao{ background: #180F4A; padding: 10px 25px; color:white;
+    border-radius:5px; margin-right:10%; margin-left:5%; } #botao:hover{
+    border:none; background: #FF2978; }
+  </style>
+  <body>
+    <nav class="nav">
+      <div class="logo"> <h1>BiblioTech</h1> </div>
+      <div class="menu">
+        <button class="buton" onclick="redAjuda()">Help</button>
+        <button class="buton" id="in" onclick="redInicio()">Start</button>
+        <button class="buton" id="botao" onclick="redEntrar()"> Login </button>
+      </div>
+    </nav>
+
+    <script>
+      function redEntrar(){ window.location.href = '/login' }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    body{ background-image: linear-gradient(to left bottom, #ff4f4f, #fe3a83,
+    #e346b6, #aa61e1, #3378f9); } .fundo{ background-image: linear-gradient(to
+    bottom, #f62d2d, #f9006e, #de2ba9, #a456d6, #3072ec); height: 350px; width:
+    400px; margin: auto; margin-top: 100px; padding: 80px 30px 20px 30px;
+    border-radius: 30px;} .form{ text-align: center; margin-top: 80px; border:
+    none;} #email, #senha{ border-radius: 10px; background-color: #a456d6;}
+    #button{ margin-top: 10px; border: none; background-image:
+    linear-gradient(to left bottom, #f17676, #fe3a83, #e346b6, #d7106d76,
+    #3378f9); } input::placeholder{ color: #000000}
+  </style>
+
+  <body>
+    <div class="fundo">
+      <div class="col-6 offset-3">
+        <form class="form" action="/login" method="post">
+          <label for="email"></label>
+          <br />
+          <input
+            type="email"
+            name="email"
+            class="form-control"
+            id="email"
+            placeholder="E-mail"
+          />
+          <br />
+          <label for="senha"></label>
+          <br />
+          <input
+            type="password"
+            name="senha"
+            class="form-control"
+            id="senha"
+            placeholder="Password"
+          />
+          <br />
+          <button type="submit" id="button"> Enter </button>
+
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>

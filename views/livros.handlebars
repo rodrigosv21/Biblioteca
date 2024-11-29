@@ -1,0 +1,63 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body{ background-image: linear-gradient(to left bottom, #ff4f4f, #fe3a83,
+      #e346b6, #aa61e1, #3378f9); } .fundo{ background-image: linear-gradient(to
+      bottom, #f62d2d, #f9006e, #de2ba9, #a456d6, #3072ec); height: 350px;
+      width: 400px; margin: auto; margin-top: 100px; padding: 80px 30px 20px
+      30px; border-radius: 30px;} .form{ text-align: center; margin-top: 30px;
+      border: none;} #autor, #titulo, #generos, #npgs{ border-radius: 10px; }
+      .button{border: none; background-image: linear-gradient(to left bottom,
+      #f17676, #fe3a83, #e346b6, #d7106d76, #3378f9); margin-top: 10px; }
+      #button{ margin-top: 10px; border: none; background-image:
+      linear-gradient(to left bottom, #f17676, #fe3a83, #e346b6, #d7106d76,
+      #3378f9) } #registrar{ margin-top: 15px; }
+    </style>
+  </head>
+  <body>
+    <div class="fundo">
+      <form class="form" action="/cadastrarlivros" method="post">
+        <fieldset>
+          <legend>Cadastrar livros</legend>
+          <label for="titulo"></label>
+          <br />
+          <input
+            name="titulo"
+            type="text"
+            id="titulo"
+            s
+            placeholder="Titulo do livro"
+          />
+          <br />
+          <label for="autor"></label>
+          <br />
+          <input name="autor" type="text" id="autor" placeholder="Autor" />
+          <br />
+          <label for="generos"></label>
+          <br />
+          <select name="generos" id="generos">
+            <option value="Narrativo">Narrativo</option>
+            <option value="Lirico">Lirico</option>
+            <option value="Dramático">Dramático</option>
+            <option value="Ficção">Ficção</option>
+            <option value="Ciência ficção">Ciência ficção</option>
+            <option value="Terror">Terror</option>
+            <option value="Mistério">Mistério</option>
+            <option value="Romance">Romance</option>
+          </select>
+
+          <label for="npgs"> </label>
+          <input name="npaginas" id="npgs" type="number" />
+          <br />
+
+          <button id="registrar" type="submit">Register</button>
+
+        </fieldset>
+      </form>
+    </div>
+
+  </body>
+</html>
