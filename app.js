@@ -8,7 +8,7 @@ app.use("/css", express.static("./css"));
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.set("views", "./views");
-app.use(express.json()); //manipulação via jsonJ
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 //conexão com o banco de dados mysql
@@ -26,7 +26,10 @@ conexao.connect(function (erro) {
 
 //rotas de renderização da rota
 app.get("/", (req, res) => {
-  res.render("inicio");
+  const data = {
+    imagem1: "images/images.logo.jpg",
+  };
+  res.render("inicio", data);
 });
 
 app.get("/login", (req, res) => {
@@ -41,7 +44,13 @@ app.get("/cadastrarlivros", (req, res) => {
   res.render("livros");
 });
 
-app.post("/entrar", (req, res) => {});
+app.get("/registros", (req, res) => {
+  const sql = "SELECT * FROM livros";
+
+  conexao.query(sql, function (erro, retorno) {
+    res.render("registros", { livros: retorno });
+  });
+});
 
 //rotas de cadastrar
 app.post("/login", (req, res) => {
@@ -83,7 +92,49 @@ app.post("/cadastrarlivros", (req, res) => {
       console.log("livro cadastrado");
     }
   });
-  res.redirect("/");
+  res.redirect("/cadastrarlivros");
 });
 
+app.get("/remover/:id", (req, res) => {
+  const sql = `DELETE FROM livros WHERE id = ${req.params.id}`;
+
+  conexao.query(sql, function (erro, retorno) {
+    if (erro) throw erro;
+
+    res.redirect("/listarlivros");
+  });
+});
+
+app.get("/editarlivros/:id", (req, res) => {
+  let sql = `SELECT * FROM livros WHERE id = ${req.params.id}`;
+
+  conexao.query(sql, (erro, retorno) => {
+    if (erro) throw erro;
+
+    res.render("./editarlivros", { livros: retorno[0] });
+  });
+});
+app.post("/editar", (req, res) => {
+  const titulo = req.body.titulo;
+  const autor = req.body.autor;
+  const generos = req.body.generos;
+  const npaginas = req.body.npaginas;
+  const id = req.body.id;
+
+  const sql = `UPDATE livros SET titulo=?, autor=?, generos=?, npaginas=? WHERE id=?`;
+  const values = [titulo, autor, generos, npaginas, id];
+
+  console.log("Query:", sql);
+  console.log("Valores:", values);
+
+  conexao.query(sql, values, (err, results) => {
+    if (err) {
+      console.error("Erro ao atualizar livro:", err);
+      // Enviar uma resposta apropriada ao usuário, como um status code 500
+      res.status(500).send("Ocorreu um erro ao atualizar o livro.");
+    } else {
+      res.redirect("/registros");
+    }
+  });
+});
 app.listen(8080);

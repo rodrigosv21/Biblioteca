@@ -1,0 +1,31 @@
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="row">
+        {{#each livros}}
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card">
+              <div class="produtos">
+                <p><strong>TITULO:</strong> {{titulo}}</p>
+                <p><strong>AUTOR:</strong> {{autor}}</p>
+                <p><strong>GENÊRO:</strong> {{generos}}</p>
+                <p><strong>Nº DE PAGINAS:</strong> {{npaginas}}</p>
+              </div>
+              <a href="/editarlivros/{{id}}" class="btn btn-warning">Aterar</a>
+              <a href="/remover/{{id}}" class="btn btn-danger">Excluir</a>
+            </div>
+          </div>
+
+        {{/each}}
+      </div>
+    </div>
+
+  </body>
+</html>

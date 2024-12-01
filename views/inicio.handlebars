@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <link rel="stylesheet" href="/estilo/estilo.css" />
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
   </head>
   <style>
     *{ box-sizing: border-box; } body{ margin:0; font-family: 'Roboto',
@@ -16,20 +17,28 @@
     } .menu a:hover{ color:#FF2978; border-top:4px solid #180F4A; } .buton{
     border: none;} #botao{ background: #180F4A; padding: 10px 25px; color:white;
     border-radius:5px; margin-right:10%; margin-left:5%; } #botao:hover{
-    border:none; background: #FF2978; }
+    border:none;background-image: linear-gradient(to left bottom, #f17676,
+    #fe3a83, #e346b6, #d7106d76, #3378f9); } img{position: fixed; height: 50%;
+    left: 70%; margin-top: 10%;}
   </style>
   <body>
     <nav class="nav">
       <div class="logo"> <h1>BiblioTech</h1> </div>
       <div class="menu">
         <button class="buton" onclick="redAjuda()">Help</button>
-        <button class="buton" id="in" onclick="redInicio()">Start</button>
+        <button class="buton" id="go" onclick="redInicio()">Start</button>
         <button class="buton" id="botao" onclick="redEntrar()"> Login </button>
       </div>
     </nav>
 
+    <img
+      src="https://img.freepik.com/vetores-gratis/pilha-de-muitos-livros_1308-30874.jpg?ga=GA1.1.2020233119.1731521266&semt=ais_hybrid"
+      alt=""
+    />
+
     <script>
-      function redEntrar(){ window.location.href = '/login' }
+      function redEntrar(){ window.location.href = '/login' } function
+      redInicio(){ window.location.href = '/cadastrarlivros'}
     </script>
   </body>
 </html>

@@ -20,13 +20,15 @@
   </head>
   <body>
     <div class="fundo">
-      <form class="form" action="/cadastrarlivros" method="post">
+      <form class="form" action="/editar" method="post">
         <fieldset>
-          <legend>Cadastrar livros</legend>
+          <legend>Editar Livros</legend>
+          <input type="hidden" name="id" value="{{livros.id}}" />
           <label for="titulo"></label>
           <br />
           <input
             name="titulo"
+            value="{{livros.titulo}}"
             type="text"
             id="titulo"
             s
@@ -35,7 +37,13 @@
           <br />
           <label for="autor"></label>
           <br />
-          <input name="autor" type="text" id="autor" placeholder="Autor" />
+          <input
+            name="autor"
+            value="{{livros.autor}}"
+            type="text"
+            id="autor"
+            placeholder="Autor"
+          />
           <br />
           <label for="generos"></label>
           <br />
@@ -51,21 +59,30 @@
           </select>
 
           <label for="npgs"> </label>
-          <input name="npaginas" id="npgs" type="number" />
+          <input
+            value="{{livros.npaginas}}"
+            name="npaginas"
+            id="npgs"
+            type="number"
+          />
           <br />
 
-          <button id="registrar" type="submit">Register</button>
+          <button id="button" type="submit">Alterar</button>
 
         </fieldset>
       </form>
     </div>
 
     <div>
-      <button type="button" onclick="ver()">Ver Registros</button>
+      <button
+        class="btn btn-secondary"
+        type="button"
+        onclick="retornar()"
+      >Voltar</button>
     </div>
 
     <script>
-      function ver(){ window.location.href = '/registros' }
+      function retornar(){ window.location.href = '/registros' }
     </script>
 
   </body>
