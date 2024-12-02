@@ -22,6 +22,11 @@
   <body>
     <div class="fundo">
       <div class="col-6 offset-3">
+
+        {{#condicionalIgualdade situacao "okCadastro"}}
+          <div class="alert alert-success">Cadastrado</div>
+        {{/condicionalIgualdade}}
+
         <form class="form" action="/login" method="post" class="cds">
           <label for="nome"></label>
           <br />

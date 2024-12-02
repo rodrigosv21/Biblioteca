@@ -1,11 +1,25 @@
+//importações
 import express from "express";
 import mysql2 from "mysql2";
 import { engine } from "express-handlebars";
 const app = express();
 
+//configurações
 app.use("/bootstrap", express.static("./node_modules/bootstrap/dist"));
 app.use("/css", express.static("./css"));
-app.engine("handlebars", engine());
+app.engine(
+  "handlebars",
+  engine({
+    helpers: {
+      // Função auxiliar para verificar igualdade
+      condicionalIgualdade: function (parametro1, parametro2, options) {
+        return parametro1 === parametro2
+          ? options.fn(this)
+          : options.inverse(this);
+      },
+    },
+  })
+);
 app.set("view engine", "handlebars");
 app.set("views", "./views");
 app.use(express.json());
@@ -44,6 +58,7 @@ app.get("/cadastrarlivros", (req, res) => {
   res.render("livros");
 });
 
+//rota de registros onde vai da pra ver todos os livros cadastrados
 app.get("/registros", (req, res) => {
   const sql = "SELECT * FROM livros";
 
@@ -52,59 +67,72 @@ app.get("/registros", (req, res) => {
   });
 });
 
-//rotas de cadastrar
-app.post("/login", (req, res) => {
-  const nome = req.body.nome;
-  const email = req.body.email;
-  const senha = req.body.senha;
-
-  if (!nome || !email || !senha) {
-    return res.status(400).send("preencher todos os dados.");
-  }
-
+//rotas da situação
+app.get("/:situacao", (req, res) => {
   const sql = `INSERT INTO usuario(nome, email, senha) VALUES ('${nome}', '${email}', ${senha})`;
-  conexao.query(sql, (erro, retorno) => {
-    if (erro) {
-      console.error(erro);
-    } else {
-      console.log("dados inseridos com sucesso");
-    }
-  });
-  res.redirect("/entrar");
-});
-
-//cadastrar livros
-app.post("/cadastrarlivros", (req, res) => {
-  const titulo = req.body.titulo;
-  const autor = req.body.autor;
-  const generos = req.body.generos;
-  const npaginas = req.body.npaginas;
-
-  if (!titulo || !autor || !generos || !npaginas) {
-    return res.status(400).send("preencher todos os dados.");
-  }
-
-  const sql = `INSERT INTO livros(titulo, autor, generos, npaginas) VALUES ('${titulo}', '${autor}', '${generos}', ${npaginas})`;
-  conexao.query(sql, (erro, retorno) => {
-    if (erro) {
-      console.error(erro);
-    } else {
-      console.log("livro cadastrado");
-    }
-  });
-  res.redirect("/cadastrarlivros");
-});
-
-app.get("/remover/:id", (req, res) => {
-  const sql = `DELETE FROM livros WHERE id = ${req.params.id}`;
-
   conexao.query(sql, function (erro, retorno) {
-    if (erro) throw erro;
-
-    res.redirect("/listarlivros");
+    res.render("login", { usuarios: retorno, situacao: req.params.situacao });
   });
 });
 
+app.get("/:livro", (req, res) => {
+  conexao.query(sql, function (erro, retorno) {
+    res.render("livros", { livros: retorno, livro: req.params.livro });
+  });
+});
+
+//rota de cadastrar usuario
+app.post("/login", (req, res) => {
+  try {
+    const nome = req.body.nome;
+    const email = req.body.email;
+    const senha = req.body.senha;
+
+    if (nome == "" || email == "" || isNaN(senha)) {
+      res.redirect("/falhaNoCadastro");
+    } else {
+      const sql = `INSERT INTO usuario(nome, email, senha) VALUES ('${nome}', '${email}', ${senha})`;
+      conexao.query(sql, (erro, retorno) => {
+        if (erro) {
+          console.error(erro);
+        } else {
+          console.log("Cadastrado com Sucesso!!");
+        }
+      });
+      res.redirect("/entrar");
+    }
+  } catch (erro) {
+    res.redirect("/falhaNoCadastro");
+  }
+});
+
+//rota de cadastrar livros
+app.post("/cadastrarlivros", (req, res) => {
+  try {
+    const titulo = req.body.titulo;
+    const autor = req.body.autor;
+    const generos = req.body.generos;
+    const npaginas = req.body.npaginas;
+
+    if (titulo == "" || autor == "" || generos == "" || isNaN(npaginas)) {
+      res.redirect("/ErroNoCadastrarlivros");
+    } else {
+      const sql = `INSERT INTO livros(titulo, autor, generos, npaginas) VALUES ('${titulo}', '${autor}', '${generos}', ${npaginas})`;
+      conexao.query(sql, (erro, retorno) => {
+        if (erro) {
+          console.error(erro);
+        } else {
+          console.log("livro cadastrado");
+        }
+      });
+      res.redirect("/cadastrarlivros");
+    }
+  } catch (erro) {
+    res.redirect("/Erro");
+  }
+});
+
+//pegar o livro por id para editar
 app.get("/editarlivros/:id", (req, res) => {
   let sql = `SELECT * FROM livros WHERE id = ${req.params.id}`;
 
@@ -114,6 +142,8 @@ app.get("/editarlivros/:id", (req, res) => {
     res.render("./editarlivros", { livros: retorno[0] });
   });
 });
+
+//rota de editar o livro
 app.post("/editar", (req, res) => {
   const titulo = req.body.titulo;
   const autor = req.body.autor;
@@ -121,20 +151,36 @@ app.post("/editar", (req, res) => {
   const npaginas = req.body.npaginas;
   const id = req.body.id;
 
-  const sql = `UPDATE livros SET titulo=?, autor=?, generos=?, npaginas=? WHERE id=?`;
-  const values = [titulo, autor, generos, npaginas, id];
+  if (titulo == "" || autor == "" || generos == "" || isNaN(npaginas)) {
+    res.redirect("/ErroAoEditar");
+  } else {
+    const sql = `UPDATE livros SET titulo=?, autor=?, generos=?, npaginas=? WHERE id=?`;
+    const values = [titulo, autor, generos, npaginas, id];
 
-  console.log("Query:", sql);
-  console.log("Valores:", values);
+    conexao.query(sql, values, (erro, retorno) => {
+      if (erro) {
+        console.error("Erro ao atualizar livro:", erro);
 
-  conexao.query(sql, values, (err, results) => {
-    if (err) {
-      console.error("Erro ao atualizar livro:", err);
-      // Enviar uma resposta apropriada ao usuário, como um status code 500
-      res.status(500).send("Ocorreu um erro ao atualizar o livro.");
-    } else {
-      res.redirect("/registros");
-    }
-  });
+        res.status(500).send("Ocorreu um erro ao atualizar o livro.");
+      } else {
+        res.redirect("/registros");
+      }
+    });
+  }
+});
+
+//remover livros na aba de registros
+app.get("/remover/:id", (req, res) => {
+  try {
+    const sql = `DELETE FROM livros WHERE id = ${req.params.id}`;
+
+    conexao.query(sql, function (erro, retorno) {
+      if (erro) throw erro;
+
+      res.redirect("/listarlivros");
+    });
+  } catch (erro) {
+    res.redirect("/FalhaAoRemover");
+  }
 });
 app.listen(8080);
