@@ -1,31 +1,34 @@
-//importações
 import express from "express";
 import mysql2 from "mysql2";
 import { engine } from "express-handlebars";
+import path from "path";
+import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
 const app = express();
+dotenv.config();
 
-//configurações
-app.use("/bootstrap", express.static("./node_modules/bootstrap/dist"));
-app.use("/css", express.static("./css"));
-app.engine(
-  "handlebars",
-  engine({
-    helpers: {
-      // Função auxiliar para verificar igualdade
-      condicionalIgualdade: function (parametro1, parametro2, options) {
-        return parametro1 === parametro2
-          ? options.fn(this)
-          : options.inverse(this);
-      },
-    },
-  })
-);
-app.set("view engine", "handlebars");
-app.set("views", "./views");
+// Usando import.meta.url para obter o caminho do diretório
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configurações e middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
-//conexão com o banco de dados mysql
+// Servir arquivos estáticos
+app.use(express.static(path.join(__dirname, "views"))); // Pasta de imagens
+app.use("/node_modules", express.static("node_modules")); // Dependências de node_modules
+app.use("/css", express.static(path.join(__dirname, "css"))); // Pasta de CSS
+
+// Configurar o motor de templates Handlebars
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", path.join(__dirname, "views"));
+
+//conexão com o banco de dados mysql e teste de conexão
 const conexao = mysql2.createConnection({
   host: "localhost",
   user: "root",
@@ -40,10 +43,7 @@ conexao.connect(function (erro) {
 
 //rotas de renderização da rota
 app.get("/", (req, res) => {
-  const data = {
-    imagem1: "images/images.logo.jpg",
-  };
-  res.render("inicio", data);
+  res.render("inicio");
 });
 
 app.get("/login", (req, res) => {
@@ -57,6 +57,88 @@ app.get("/entrar", (req, res) => {
 app.get("/cadastrarlivros", (req, res) => {
   res.render("livros");
 });
+app.get("/ajuda", (req, res) => {
+  res.render("help");
+});
+
+app.get("/registros", (req, res) => {
+  res.render("registros");
+});
+
+// Rota de cadastrar usuário
+app.post("/login", async (req, res) => {
+  const { name, gmail, password } = req.body;
+
+  if (!name || !gmail || !password)
+    return res.status(400).send("Preencha todos os campos.");
+
+  const buscar = "SELECT * FROM usuario WHERE gmail = ?";
+  conexao.query(buscar, [gmail], async (erro, resultados) => {
+    if (resultados.length > 0)
+      return res.status(422).send("Email já cadastrado.");
+
+    const salt = await bcrypt.genSalt(12);
+    const senha = await bcrypt.hash(password, salt);
+    const sqlInsert =
+      "INSERT INTO usuario (name, gmail, password) VALUES (?, ?, ?)";
+    conexao.query(sqlInsert, [name, gmail, senha], (erro) => {
+      if (erro) return res.status(500).send("Erro ao cadastrar usuário.");
+      res.redirect("entrar");
+    });
+  });
+});
+
+// Rota de confirmação de login
+app.post("/login/entrar", async (req, res) => {
+  const { gmail, password } = req.body;
+
+  const sqlSelect = "SELECT * FROM usuario WHERE gmail = ?";
+  conexao.query(sqlSelect, [gmail], async (erro, resultados) => {
+    if (resultados.length === 0)
+      return res.status(404).send("Usuário não encontrado.");
+
+    const senhaValida = await bcrypt.compare(password, resultados[0].password);
+    if (!senhaValida) return res.status(401).send("Senha incorreta.");
+
+    const token = jwt.sign(
+      { id: resultados[0].id, gmail: resultados[0].gmail },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    res
+      .cookie("authToken", token, { httpOnly: true, maxAge: 3600000 })
+      .redirect("livros");
+  });
+});
+
+//rota de cadastrar livros
+app.post("/cadastrarlivros", (req, res) => {
+  try {
+    const { titulo, autor, generos, npaginas } = req.body;
+
+    if (!titulo || !autor || !generos || !npaginas) {
+      return res
+        .status(400)
+        .send("Dados inválidos. Verifique os campos enviados.");
+    }
+
+    const sql =
+      "INSERT INTO livros (titulo, autor, generos, npaginas) VALUES (?, ?, ?, ?)";
+
+    conexao.query(sql, [titulo, autor, generos, npaginas], (erro) => {
+      if (erro) {
+        console.error("Erro ao cadastrar o livro:", erro);
+        return res.status(500).send("Erro ao salvar no banco de dados.");
+      }
+
+      console.log("Livro cadastrado com sucesso!");
+      res.redirect("registros");
+    });
+  } catch (erro) {
+    console.error("Erro inesperado:", erro);
+    res.status(500).send("Erro inesperado. Tente novamente mais tarde.");
+  }
+});
 
 //rota de registros onde vai da pra ver todos os livros cadastrados
 app.get("/registros", (req, res) => {
@@ -65,71 +147,6 @@ app.get("/registros", (req, res) => {
   conexao.query(sql, function (erro, retorno) {
     res.render("registros", { livros: retorno });
   });
-});
-
-//rotas da situação
-app.get("/:situacao", (req, res) => {
-  const sql = `INSERT INTO usuario(nome, email, senha) VALUES ('${nome}', '${email}', ${senha})`;
-  conexao.query(sql, function (erro, retorno) {
-    res.render("login", { usuarios: retorno, situacao: req.params.situacao });
-  });
-});
-
-app.get("/:livro", (req, res) => {
-  conexao.query(sql, function (erro, retorno) {
-    res.render("livros", { livros: retorno, livro: req.params.livro });
-  });
-});
-
-//rota de cadastrar usuario
-app.post("/login", (req, res) => {
-  try {
-    const nome = req.body.nome;
-    const email = req.body.email;
-    const senha = req.body.senha;
-
-    if (nome == "" || email == "" || isNaN(senha)) {
-      res.redirect("/falhaNoCadastro");
-    } else {
-      const sql = `INSERT INTO usuario(nome, email, senha) VALUES ('${nome}', '${email}', ${senha})`;
-      conexao.query(sql, (erro, retorno) => {
-        if (erro) {
-          console.error(erro);
-        } else {
-          console.log("Cadastrado com Sucesso!!");
-        }
-      });
-      res.redirect("/entrar");
-    }
-  } catch (erro) {
-    res.redirect("/falhaNoCadastro");
-  }
-});
-
-//rota de cadastrar livros
-app.post("/cadastrarlivros", (req, res) => {
-  try {
-    const titulo = req.body.titulo;
-    const autor = req.body.autor;
-    const generos = req.body.generos;
-    const npaginas = req.body.npaginas;
-
-    if (titulo == "" || autor == "" || generos == "" || isNaN(npaginas)) {
-      res.redirect("/ErroNoCadastrarlivros");
-    } else {
-      const sql = `INSERT INTO livros(titulo, autor, generos, npaginas) VALUES ('${titulo}', '${autor}', '${generos}', ${npaginas})`;
-      conexao.query(sql, (erro, retorno) => {
-        if (erro) {
-          console.error(erro);
-        } else {
-          console.log("livro cadastrado");
-        }
-      });
-      res.redirect("/cadastrarlivros");
-    }
-  } catch (erro) {
-    res.redirect("/Erro");
-  }
 });
 
 //pegar o livro por id para editar
@@ -145,13 +162,9 @@ app.get("/editarlivros/:id", (req, res) => {
 
 //rota de editar o livro
 app.post("/editar", (req, res) => {
-  const titulo = req.body.titulo;
-  const autor = req.body.autor;
-  const generos = req.body.generos;
-  const npaginas = req.body.npaginas;
-  const id = req.body.id;
+  const { titulo, autor, generos, npaginas, id } = req.body;
 
-  if (titulo == "" || autor == "" || generos == "" || isNaN(npaginas)) {
+  if (!titulo || !autor || !generos || isNaN(npaginas)) {
     res.redirect("/ErroAoEditar");
   } else {
     const sql = `UPDATE livros SET titulo=?, autor=?, generos=?, npaginas=? WHERE id=?`;
@@ -177,10 +190,10 @@ app.get("/remover/:id", (req, res) => {
     conexao.query(sql, function (erro, retorno) {
       if (erro) throw erro;
 
-      res.redirect("/listarlivros");
+      res.redirect("registros");
     });
   } catch (erro) {
-    res.redirect("/FalhaAoRemover");
+    res.redirect("/FalhaRemover");
   }
 });
 app.listen(8080);
