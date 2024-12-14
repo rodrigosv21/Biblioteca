@@ -27,9 +27,9 @@
 
     <div class="container">
       <div class="row">
-        {{#each livros}}
-          <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="card">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <div class="card">
+            {{#each livros}}
               <div class="produtos">
                 <p> <strong>TITULO:</strong> {{titulo}}</p>
                 <p><strong>AUTOR:</strong> {{autor}}</p>
@@ -49,10 +49,9 @@
                   id="b2"
                 >Excluir</a>
               </div>
-            </div>
+            {{/each}}
           </div>
-
-        {{/each}}
+        </div>
       </div>
     </div>
 
