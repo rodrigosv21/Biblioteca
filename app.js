@@ -1,13 +1,17 @@
 import express from "express";
-import { engine } from "express-handlebars";
 import path from "path";
 import { fileURLToPath } from "url";
 import session from "express-session";
 import flash from "connect-flash";
-import LivrosController from "./src/app/controllers/LivrosController.js";
+import cookieParser from "cookie-parser";
+import LivrosController, {
+  authMiddleware,
+} from "./src/app/controllers/LivrosController.js";
 import UsuarioController from "./src/app/controllers/UsuarioController.js";
+import conexao from "./src/app/database/conexao.js";
 
 const app = express();
+app.use(cookieParser());
 
 // Usando import.meta.url para obter o caminho do diretório
 const __filename = fileURLToPath(import.meta.url);
@@ -20,12 +24,11 @@ app.use(express.urlencoded({ extended: true }));
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, "main")));
 app.use("/node_modules", express.static("node_modules"));
-app.use("/css", express.static(path.join(__dirname, "css")));
+app.use(express.static(path.join(__dirname, "public")));
 
-// Configurar o motor de templates Handlebars
-app.engine("handlebars", engine());
-app.set("view engine", "handlebars");
+app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   session({
@@ -44,27 +47,31 @@ app.use((req, res, next) => {
 });
 
 //rotas de renderização da rota
+app.get("/help", (req, res) => {
+  res.render("Help", { title: "ajuda" });
+});
 app.get("/", (req, res) => {
-  res.render("inicio");
+  res.render("Login", { title: "cadastrar usuario" });
 });
-
-app.get("/login", (req, res) => {
-  res.render("login");
-});
-
 app.get("/entrar", (req, res) => {
-  res.render("entrar");
+  res.render("Entrar", { title: "logar" });
 });
+app.get("/cadastrarLivros", authMiddleware, (req, res) => {
+  res.render("CadLivros", { title: "cadastrar livros" });
+});
+app.get("/editarLivro", authMiddleware, (req, res) => {
+  res.render("EditarLivros", { title: "editar livro" });
+});
+app.get("/registros", authMiddleware, (req, res) => {
+  const buscarLivros = "SELECT * FROM livros"; 
+  conexao.query(buscarLivros, (erro, livros) => {
+    if (erro) {
+      console.error("Erro ao buscar livros:", erro);
+      return res.status(500).send("Erro ao buscar livros.");
+    }
 
-app.get("/cadastrarlivros", (req, res) => {
-  res.render("livros");
-});
-app.get("/ajuda", (req, res) => {
-  res.render("help");
-});
-
-app.get("/registros", (req, res) => {
-  res.render("registros");
+    res.render("Registros", { livros });
+  });
 });
 
 // Rota de cadastrar usuário
@@ -74,17 +81,21 @@ app.post("/login", UsuarioController.cadastrarUser);
 app.post("/login/entrar", UsuarioController.confirm);
 
 //rota de cadastrar livros
-app.post("/cadastrarlivros", LivrosController.cadastrar);
+app.post("/cadastrarlivros", authMiddleware, LivrosController.cadastrar);
 
 //rota de registros onde vai da pra ver todos os livros cadastrados
-app.get("/registros", LivrosController.listarTudo);
+app.get("/registros", authMiddleware, LivrosController.listarTudo);
 
 //pegar o livro por id para editar
-app.get("/editarlivros/:id", LivrosController.buscar);
+app.get("/editarlivros/:id", authMiddleware, LivrosController.buscar);
 
 //rota de editar o livro
-app.post("/editar", LivrosController.atualizar);
+app.post("/editar", authMiddleware, LivrosController.atualizar);
 
 //remover livros na aba de registros
-app.get("/remover/:id", LivrosController.deletar);
+app.get("/remover/:id", authMiddleware, LivrosController.deletar);
 app.listen(8080);
+
+console.log("servidor rodando na porta 8080")
+
+export default app;
